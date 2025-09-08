@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimal Launch Angle Solver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 m-4">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Optimal Projectile Angle Solver</h1>
+            <p class="text-gray-600 mt-2">This tool uses projectile motion equations with quadratic drag to find the launch angle that maximizes range.</p>
+        </div>
+
+        <!-- Inputs Section -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div>
+                <label for="v0" class="block text-sm font-medium text-gray-700">Initial Velocity (m/s)</label>
+                <input type="number" id="v0" value="6.25" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="h0" class="block text-sm font-medium text-gray-700">Initial Height (m)</label>
+                <input type="number" id="h0" value="1.04" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="hf" class="block text-sm font-medium text-gray-700">Final Height (m)</label>
+                <input type="number" id="hf" value="0" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="m" class="block text-sm font-medium text-gray-700">Mass (kg)</label>
+                <input type="number" id="m" value="0.010475" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="r" class="block text-sm font-medium text-gray-700">Radius (m)</label>
+                <input type="number" id="r" value="0.01" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="cd" class="block text-sm font-medium text-gray-700">Drag Coefficient (C<sub>D</sub>)</label>
+                <input type="number" id="cd" value="0.47" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="rho" class="block text-sm font-medium text-gray-700">Air Density (kg/m³)</label>
+                <input type="number" id="rho" value="1.225" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+             <div>
+                <label for="g" class="block text-sm font-medium text-gray-700">Gravity (m/s²)</label>
+                <input type="number" id="g" value="9.8" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+             <div>
+                <label for="dt" class="block text-sm font-medium text-gray-700">Time Step (s)</label>
+                <input type="number" id="dt" value="0.0001" step="0.00001" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+        </div>
+        
+        <div class="text-center mb-8">
+            <button id="solveBtn" class="bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                Find Optimal Angle
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-lg text-center hidden">
+             <div id="loading" class="hidden text-gray-700">
+                <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="font-semibold text-lg">Calculating... please wait.</p>
+                <p class="text-sm">This can take a few seconds.</p>
+            </div>
+            <div id="resultContent">
+                <h2 class="text-xl font-bold text-indigo-900">Optimal Launch Angle</h2>
+                <p class="text-5xl font-bold text-indigo-600 my-2"><span id="optimalAngle"></span>&deg;</p>
+                <p class="text-gray-700">Yields a maximum range of <strong id="maxRange" class="font-semibold"></strong> meters.</p>
+            </div>
+        </div>
+
+        <!-- Specific Angle Test Section -->
+        <div class="mt-8 border-t pt-6">
+            <h3 class="text-lg font-medium text-center text-gray-800 mb-4">Or, Test a Specific Angle</h3>
+            <div class="flex items-center justify-center gap-4">
+                <div>
+                    <label for="testAngle" class="sr-only">Test Angle</label>
+                    <input type="number" id="testAngle" value="0" class="block w-40 bg-gray-50 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Angle in degrees">
+                </div>
+                <button id="testBtn" class="bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
+                    Test Angle
+                </button>
+            </div>
+            <div id="testResult" class="text-center mt-4 text-gray-700 hidden">
+                Range at <strong id="testedAngle"></strong>&deg; is <strong id="testRange" class="font-semibold"></strong> meters.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const solveBtn = document.getElementById('solveBtn');
+        const resultsDiv = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const resultContent = document.getElementById('resultContent');
+        const optimalAngleEl = document.getElementById('optimalAngle');
+        const maxRangeEl = document.getElementById('maxRange');
+
+        const testBtn = document.getElementById('testBtn');
+        const testAngleInput = document.getElementById('testAngle');
+        const testResultDiv = document.getElementById('testResult');
+        const testedAngleEl = document.getElementById('testedAngle');
+        const testRangeEl = document.getElementById('testRange');
+
+        
+        /* Simulates the projectile's flight for a given launch angle. */
+        
+        function runSimulation(theta) {
+            const v0 = parseFloat(document.getElementById('v0').value);
+            const h0 = parseFloat(document.getElementById('h0').value);
+            const hf = parseFloat(document.getElementById('hf').value);
+            const m = parseFloat(document.getElementById('m').value);
+            const r = parseFloat(document.getElementById('r').value);
+            const CD = parseFloat(document.getElementById('cd').value);
+            const rho = parseFloat(document.getElementById('rho').value);
+            const g = parseFloat(document.getElementById('g').value);
+            const dt = parseFloat(document.getElementById('dt').value);
+            
+            const A = Math.PI * r * r;
+            const thetaRad = theta * Math.PI / 180;
+            const maxSteps = 100000;
+
+            let px = 0, py = h0;
+            let vx = v0 * Math.cos(thetaRad), vy = v0 * Math.sin(thetaRad);
+            let px_prev, py_prev;
+
+            for (let i = 0; i < maxSteps; i++) {
+                px_prev = px;
+                py_prev = py;
+                
+                const v_total = Math.sqrt(vx * vx + vy * vy);
+                const ax = -(rho * CD * A / (2 * m)) * vx * v_total;
+                const ay = -g - (rho * CD * A / (2 * m)) * vy * v_total;
+                
+                vx += ax * dt;
+                vy += ay * dt;
+                px += vx * dt;
+                py += vy * dt;
+
+                if (py < hf && vy < 0) {
+                    const fraction = (py_prev - hf) / (py_prev - py);
+                    return px_prev + (px - px_prev) * fraction;
+                }
+
+                if (i === maxSteps - 1) return px;
+            }
+            return px;
+        }
+
+        /* Uses a Ternary Search to efficiently find the optimal angle. */
+        function findOptimalAngle() {
+            let low = -90, high = 90;
+            const iterations = 100;
+
+            for (let i = 0; i < iterations; i++) {
+                const m1 = low + (high - low) / 3;
+                const m2 = high - (high - low) / 3;
+                const range1 = runSimulation(m1);
+                const range2 = runSimulation(m2);
+                if (range1 < range2) low = m1;
+                else high = m2;
+            }
+            const optimalAngle = (low + high) / 2;
+            const maxRange = runSimulation(optimalAngle);
+            return { optimalAngle, maxRange };
+        }
+
+        solveBtn.addEventListener('click', () => {
+            resultsDiv.classList.remove('hidden');
+            resultContent.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+            solveBtn.disabled = true;
+            solveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            setTimeout(() => {
+                const result = findOptimalAngle();
+                optimalAngleEl.textContent = result.optimalAngle.toFixed(4);
+                maxRangeEl.textContent = result.maxRange.toFixed(4);
+                
+                loadingDiv.classList.add('hidden');
+                resultContent.classList.remove('hidden');
+                solveBtn.disabled = false;
+                solveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }, 50);
+        });
+
+        testBtn.addEventListener('click', () => {
+            const angleToTest = parseFloat(testAngleInput.value);
+            if (isNaN(angleToTest)) return;
+            
+            const range = runSimulation(angleToTest);
+
+            testedAngleEl.textContent = angleToTest.toFixed(3);
+            testRangeEl.textContent = range.toFixed(5);
+            testResultDiv.classList.remove('hidden');
+        });
+
+    </script>
+</body>
+</html>
