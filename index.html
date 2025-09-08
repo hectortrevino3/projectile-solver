@@ -188,8 +188,8 @@
 
             setTimeout(() => {
                 const result = findOptimalAngle();
-                optimalAngleEl.textContent = result.optimalAngle.toFixed(4);
-                maxRangeEl.textContent = result.maxRange.toFixed(4);
+                optimalAngleEl.textContent = result.optimalAngle.toFixed(3);
+                maxRangeEl.textContent = result.maxRange.toFixed(3);
                 
                 loadingDiv.classList.add('hidden');
                 resultContent.classList.remove('hidden');
@@ -205,10 +205,11 @@
             const range = runSimulation(angleToTest);
 
             testedAngleEl.textContent = angleToTest.toFixed(3);
-            testRangeEl.textContent = range.toFixed(5);
+            testRangeEl.textContent = range.toFixed(3);
             testResultDiv.classList.remove('hidden');
         });
 
     </script>
 </body>
+
 </html>
