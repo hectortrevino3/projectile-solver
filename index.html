@@ -137,6 +137,7 @@
             let px = 0, py = h0;
             let vx = v0 * Math.cos(thetaRad), vy = v0 * Math.sin(thetaRad);
             let px_prev, py_prev;
+            let everAboveHF = h0 >= hf;
 
             for (let i = 0; i < maxSteps; i++) {
                 px_prev = px;
@@ -151,20 +152,32 @@
                 px += vx * dt;
                 py += vy * dt;
 
-                if (py < hf && vy < 0) {
+                if (py >= hf) everAboveHF = true;
+
+                if ((py_prev - hf) * (py - hf) <= 0 && vy < 0) {
                     const fraction = (py_prev - hf) / (py_prev - py);
                     return px_prev + (px - px_prev) * fraction;
                 }
-
-                if (i === maxSteps - 1) return px;
             }
-            return px;
+            return everAboveHF ? 0 : 0;
         }
 
         /* Uses a Ternary Search to efficiently find the optimal angle. */
         function findOptimalAngle() {
-            let low = -90, high = 90;
+            let low = 0, high = 90;
             const iterations = 100;
+
+            const v0 = parseFloat(document.getElementById('v0').value);
+            const h0 = parseFloat(document.getElementById('h0').value);
+            const hf = parseFloat(document.getElementById('hf').value);
+            const g = parseFloat(document.getElementById('g').value);
+
+            if (hf > h0) {
+                const needed = (2 * g * (hf - h0)) / (v0 * v0);
+                const sinMin = Math.sqrt(Math.min(1, Math.max(0, needed)));
+                const thetaMin = Math.asin(sinMin) * 180 / Math.PI;
+                low = Math.max(low, thetaMin);
+            }
 
             for (let i = 0; i < iterations; i++) {
                 const m1 = low + (high - low) / 3;
@@ -211,5 +224,4 @@
 
     </script>
 </body>
-
 </html>
